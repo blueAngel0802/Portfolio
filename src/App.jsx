@@ -20,6 +20,32 @@ function useScrollProgress() {
   return p
 }
 
+
+function useRevealQueue(selector = '[data-reveal]', { rootMargin = '0px 0px -10% 0px', threshold = 0.12 } = {}) {
+  useEffect(() => {
+    const els = Array.from(document.querySelectorAll(selector))
+    if (!els.length) return
+
+    // Stagger order: DOM order
+    els.forEach((el, i) => {
+      el.style.setProperty('--reveal-delay', `${i * 70}ms`)
+    })
+
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          io.unobserve(entry.target)
+        }
+      })
+    }, { root: null, rootMargin, threshold })
+
+    els.forEach((el) => io.observe(el))
+    return () => io.disconnect()
+  }, [selector, rootMargin, threshold])
+}
+
+
 function Icon({ name }) {
   // Simple inline icons so we don't add deps.
   if (name === 'in') {
@@ -133,7 +159,7 @@ function Journey() {
   const items = data.journey.items
   return (
     <section className="section journey" id="journey">
-      <h2 className="section-title">{data.journey.title}</h2>
+      <h2 className="section-title" data-reveal>{data.journey.title}</h2>
 
       <div className="timeline">
         <div className="timeline-line" aria-hidden="true" />
@@ -142,7 +168,7 @@ function Journey() {
           return (
             <div className={`tl-item ${side}`} key={`${it.title}-${it.org}-${it.date}`}>
               <div className="tl-dot" aria-hidden="true" />
-              <div className="tl-card">
+              <div className="tl-card" data-reveal>
                 <div className="tl-head">
                   <div className="tl-role">{it.title} <span className="tl-org">at {it.org}</span></div>
                   <div className="tl-date">{it.date}</div>
@@ -160,7 +186,7 @@ function Journey() {
 function Skills() {
   return (
     <section className="section" id="skills">
-      <h2 className="section-title">Skills</h2>
+      <h2 className="section-title" data-reveal>Skills</h2>
 
       <div className="skills-wrap">
         {data.skills.groups.map((g) => (
@@ -168,7 +194,7 @@ function Skills() {
             <div className="skills-label">{g.label}</div>
             <div className="skills-grid">
               {g.items.map((s) => (
-                <div className="skill" key={s.name}>
+                <div className="skill" key={s.name} data-reveal>
                   <i className={s.iconClass} aria-hidden="true" />
                   <span>{s.name}</span>
                 </div>
@@ -184,12 +210,12 @@ function Skills() {
 function Projects() {
   return (
     <section className="section" id="projects">
-      <h2 className="section-title">{data.projects.title}</h2>
-      <p className="section-sub">{data.projects.subtitle}</p>
+      <h2 className="section-title" data-reveal>{data.projects.title}</h2>
+      <p className="section-sub" data-reveal>{data.projects.subtitle}</p>
 
       <div className="project-grid">
         {data.projects.cards.map((c) => (
-          <div className="project-card" key={c.title}>
+          <div className="project-card" key={c.title} data-reveal>
             <div className="project-title">{c.title}</div>
             <div className="project-desc">{c.desc}</div>
             <div className="project-badge">{c.badge}</div>
@@ -216,11 +242,11 @@ function Contact() {
 
   return (
     <section className="section" id="contact">
-      <h2 className="section-title">{data.contact.title}</h2>
-      <p className="section-sub">{data.contact.subtitle}</p>
+      <h2 className="section-title" data-reveal>{data.contact.title}</h2>
+      <p className="section-sub" data-reveal>{data.contact.subtitle}</p>
 
       <div className="contact-grid">
-        <div className="contact-left">
+        <div className="contact-left" data-reveal>
           <h3 className="contact-h">{data.contact.leftTitle}</h3>
           <p className="contact-p">{data.contact.leftText}</p>
 
@@ -237,7 +263,7 @@ function Contact() {
           </div>
         </div>
 
-        <div className="contact-form">
+        <div className="contact-form" data-reveal>
           <div className="form-row two">
             <div className="field">
               <label>First Name <span className="req">*</span></label>
@@ -294,6 +320,7 @@ function Contact() {
 export default function App() {
   const progress = useScrollProgress()
 
+  useRevealQueue()
   useEffect(() => {
     document.title = data.siteTitle || 'My Portfolio'
   }, [])
