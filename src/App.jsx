@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { data } from './data.js'
+import CanvasBackgrounds from './components/CanvasBackground.jsx'
 
 function useScrollProgress() {
   const [p, setP] = useState(0)
@@ -21,24 +22,26 @@ function useScrollProgress() {
 }
 
 
-function useRevealQueue(selector = '[data-reveal]', { rootMargin = '0px 0px -10% 0px', threshold = 0.12 } = {}) {
+function useRevealQueue(
+  selector = '[data-reveal]',
+  { rootMargin = '0px 0px -10% 0px', threshold = 0.12 } = {}
+) {
   useEffect(() => {
     const els = Array.from(document.querySelectorAll(selector))
     if (!els.length) return
 
-    // Stagger order: DOM order
-    els.forEach((el, i) => {
-      el.style.setProperty('--reveal-delay', `${i * 70}ms`)
-    })
+    // queue order (DOM order)
+    els.forEach((el, i) => el.style.setProperty('--reveal-delay', `${i * 70}ms`))
 
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add('is-visible')
-          io.unobserve(entry.target)
-        }
-      })
-    }, { root: null, rootMargin, threshold })
+    const io = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add('is-visible')
+          else entry.target.classList.remove('is-visible') // ✅ key for “permanent”
+        })
+      },
+      { root: null, rootMargin, threshold }
+    )
 
     els.forEach((el) => io.observe(el))
     return () => io.disconnect()
@@ -320,13 +323,14 @@ function Contact() {
 export default function App() {
   const progress = useScrollProgress()
 
-  useRevealQueue()
+  useRevealQueue();
   useEffect(() => {
     document.title = data.siteTitle || 'My Portfolio'
   }, [])
 
   return (
     <div className="page">
+      <CanvasBackgrounds />
       <SideEmail email={data.hero.sideEmail} />
       <ScrollRail progress={progress} />
       <BackToTop />
